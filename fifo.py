@@ -51,13 +51,12 @@ def try_match(transaction, transaction_ledger):
         print(f"No matching transaction found for {transaction['TRADE_ID']}")
         return transaction['POSITION']
 
-    initial_position = transaction['POSITION']
-    running_position = initial_position
     for idx, eligible_txn in match_eligible_transactions.iterrows():
         # Perfect match
         if transaction['POSITION'] == eligible_txn['POSITION']:
             print(f"{transaction['TRADE_ID']} perfectly matched with {transaction_ledger.at[idx, 'TRADE_ID']}")
             transaction_ledger.at[idx, 'POSITION'] = 0
+            transaction['POSITION'] = 0
         elif transaction['POSITION'] > eligible_txn['POSITION']:
             transaction['POSITION'] = transaction['POSITION'] - eligible_txn['POSITION']
             transaction_ledger.at[idx, 'POSITION'] = 0
@@ -79,9 +78,9 @@ def allocate_trades(filename: str = "bonds_sample_transactions.csv") -> pd.DataF
         for idx, transaction in df[['EXECUTION_TIMESTAMP', 'EVENT', 'TRADE_ID', 'POSITION']].copy().iterrows():
             print(f"\n\nProcessing {transaction['TRADE_ID']}")
             if is_buy(transaction):
-                df.at[idx, 'POSITION'] = try_match(transaction, sells)
+                buys.at[idx, 'POSITION'] = try_match(transaction, sells)
             else:
-                df.at[idx, 'POSITION']  = try_match(transaction, buys)
+                sells.at[idx,'POSITION']  = try_match(transaction, buys)
             print(buys)
             print(sells)
 
