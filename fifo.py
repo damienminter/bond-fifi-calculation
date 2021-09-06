@@ -63,7 +63,7 @@ def try_match(transaction, transaction_ledger):
             transaction_ledger.at[idx, 'POSITION'] = 0
         else:
             transaction['POSITION'] = 0
-            transaction_ledger.at[idx, 'POSITION'] = transaction['POSITION'] - eligible_txn['POSITION']
+            transaction_ledger.at[idx, 'POSITION'] =  eligible_txn['POSITION'] - transaction['POSITION']
 
         if transaction['POSITION'] == 0:
             return 0
