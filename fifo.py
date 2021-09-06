@@ -49,7 +49,7 @@ def try_match(transaction, transaction_ledger):
                     transaction_ledger['POSITION'] > 0)]
     if match_eligible_transactions.empty:
         print(f"No matching transaction found for {transaction['TRADE_ID']}")
-        return transaction['POSITION']
+        return transaction['POSITION'], transaction_ledger
 
     for idx, eligible_txn in match_eligible_transactions.iterrows():
         # Perfect match
@@ -65,8 +65,8 @@ def try_match(transaction, transaction_ledger):
             transaction_ledger.at[idx, 'POSITION'] =  eligible_txn['POSITION'] - transaction['POSITION']
 
         if transaction['POSITION'] == 0:
-            return 0
-    return transaction['POSITION']
+            return 0, transaction_ledger
+    return transaction['POSITION'], transaction_ledger
 
 
 def allocate_trades(filename: str = "bonds_sample_transactions.csv") -> pd.DataFrame:
@@ -78,11 +78,13 @@ def allocate_trades(filename: str = "bonds_sample_transactions.csv") -> pd.DataF
         for idx, transaction in df[['EXECUTION_TIMESTAMP', 'EVENT', 'TRADE_ID', 'POSITION']].copy().iterrows():
             print(f"\n\nProcessing {transaction['TRADE_ID']}")
             if is_buy(transaction):
-                buys.at[idx, 'POSITION'] = try_match(transaction, sells)
+                buys.at[idx, 'POSITION'], sells = try_match(transaction, sells)
             else:
-                sells.at[idx,'POSITION']  = try_match(transaction, buys)
-            print(buys)
-            print(sells)
+                sells.at[idx,'POSITION'], buys  = try_match(transaction, buys)
+
+            # Display partially/unallocated trades
+            print(buys[buys['POSITION'] > 0])
+            print(sells[sells['POSITION'] > 0])
 
 
 if __name__ == '__main__':
